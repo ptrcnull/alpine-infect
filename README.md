@@ -6,6 +6,7 @@ Tested setups:
 | Platform | OS | Status |
 | - | - | - |
 | QEMU | Ubuntu 18.04 (without LUKS/LVM) | Works :white_check_mark: |
+| Vultr | Debian 11 | Works :white_check_mark: |
 
 This script **will** destroy your current install. Proceed with caution.
 
