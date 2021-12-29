@@ -55,7 +55,7 @@ mount -t proc proc proc
 
 cp /etc/resolv.conf etc/resolv.conf
 echo '
-pivot_root . old_root
+pivot_root . old_root || exit 1
 rm second_stage.sh
 
 apk add alpine-base util-linux-misc syslinux gdb procps
