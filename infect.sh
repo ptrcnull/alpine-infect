@@ -73,9 +73,15 @@ echo "tty1::wait:/sbin/getty -n -l /third_stage.sh 38400 tty1" > /etc/inittab
 
 # here be dragons
 
+init_file=/old_root/sbin/init
+init_link=$(readlink $init_file)
+if [[ "$init_link" != "" ]]; then
+  init_file=/old_root$init_link
+fi
+
 echo -e "set follow-fork-mode child
 set solib-absolute-prefix /old_root
-file /old_root$(cat /proc/1/cmdline)
+file $init_file
 attach 1
 call (int)execl(\"/sbin/init\", \"/sbin/init\", 0)
 " | gdb
