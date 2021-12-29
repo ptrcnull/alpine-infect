@@ -32,7 +32,7 @@ filename="alpine-minirootfs-$version-$arch.tar.gz"
 
 # clean up, just in case
 rm -f "$filename"
-umount new_root 2>/dev/null || true
+umount -R new_root 2>/dev/null || true
 rm -rf new_root
 
 # download alpine minirootfs
