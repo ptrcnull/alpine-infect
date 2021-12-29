@@ -56,23 +56,51 @@ echo '
 pivot_root . old_root
 rm second_stage.sh
 
-apk add alpine-base util-linux-misc syslinux
+apk add alpine-base util-linux-misc syslinux gdb procps
+
+_ppid=$$
+while [[ "$_ppid" != 1 ]]; do
+  parent=$_ppid
+  _ppid=$(cut -f4 -d" " /proc/$parent/stat)
+done
+
+busybox kill -- "-$parent"
+
+cp /etc/inittab /etc/inittab.bak
+echo "tty1::wait:/sbin/getty -n -l /third_stage.sh 38400 tty1" > /etc/inittab
+
+# here be dragons
+
+echo -e "set follow-fork-mode child
+set solib-absolute-prefix /old_root
+file /old_root$(cat /proc/1/cmdline)
+attach 1
+call (int)execl(\"/sbin/init\", \"/sbin/init\", 0)
+" | gdb
+' > second_stage.sh
+
+echo '#!/bin/ash
+rm third_stage.sh
+
+# kill all remaining processes
+lsof | grep old_root | awk "{print \$1}" | uniq | xargs kill -9 2>/dev/null
 
 /bin/umount -Rl old_root/* 2>/dev/null
-rm -rf old_root/*
+/bin/umount old_root
 
-export DISKOPTS="-k lts /old_root"
-echo sys > /tmp/alpine-install-diskmode.out
+# get nameservers
+udhcpc
+
+# restore inittab
+mv /etc/inittab.bak /etc/inittab
+
+# maybe ask user what kernel they want? TODO
+export DISKOPTS="-k lts"
 setup-alpine
 
-echo "Fixing MBR..."
-rootdev=$(grep old_root /proc/mounts | cut -d" " -f1 | sed -E "s/[0-9]+$//")
-dd if=/usr/share/syslinux/mbr.bin of=$rootdev
-extlinux -i /old_root/boot
-
 echo "It is now safe to turn off your computer."
-' > second_stage.sh
-bin/ash second_stage.sh
-
-# that will probably fail
 reboot
+' > third_stage.sh
+chmod +x third_stage.sh
+
+setsid bin/ash second_stage.sh
