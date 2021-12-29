@@ -91,7 +91,13 @@ echo '#!/bin/ash
 rm third_stage.sh
 
 # kill all remaining processes
-lsof | grep old_root | awk "{print \$1}" | uniq | xargs kill -9 2>/dev/null
+cd /proc
+ps ax | awk "{print \$1}" | tail -n +3 | while read pid; do
+  if grep -qE "^/dev/\w+ / " /proc/$pid/mounts; then
+    kill -9 $pid
+  fi
+done
+cd /
 
 /bin/umount -Rl old_root/* 2>/dev/null
 /bin/umount old_root
