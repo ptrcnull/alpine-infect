@@ -17,6 +17,8 @@ if [ "$uid" -ne 0 ]; then
     exec sudo $0
 fi
 
+mount -o remount --make-private /
+
 arch="x86_64"
 
 case $(uname -m) in
