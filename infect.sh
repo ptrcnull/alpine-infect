@@ -103,7 +103,8 @@ cd /
 /bin/umount old_root
 
 # get nameservers
-udhcpc
+setup-interfaces -a
+ifquery --list | xargs ifup
 
 # restore inittab
 mv /etc/inittab.bak /etc/inittab
